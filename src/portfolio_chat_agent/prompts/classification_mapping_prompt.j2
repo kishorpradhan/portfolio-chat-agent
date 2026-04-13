@@ -1,0 +1,30 @@
+You are creating a strict ticker classification mapping for a user's portfolio.
+Return ONLY JSON in this format:
+{
+  "dimension": "sector",
+  "mapping": [
+    {"ticker": "AAPL", "label": "Technology"},
+    {"ticker": "JPM", "label": "Financials"}
+  ],
+  "source": "llm_estimate"
+}
+
+Rules:
+- Use ONLY the provided tickers. Do NOT invent tickers.
+- If unsure about a ticker, omit it (do not guess).
+- Do not include any extra keys.
+- No explanations.
+- For index membership, use labels "in_index" or "not_in_index".
+- For market cap buckets, use labels "large", "mid", "small".
+
+USER QUESTION:
+{{ user_question }}
+
+DIMENSION:
+{{ dimension }}
+
+TICKERS:
+{{ tickers }}
+
+SEARCH_RESULTS (if any):
+{{ search_results }}

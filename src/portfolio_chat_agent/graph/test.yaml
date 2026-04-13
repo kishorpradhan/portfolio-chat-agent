@@ -1,0 +1,13 @@
+curl -sS -X POST http://127.0.0.1:8082/chat/run \
+  -H "Content-Type: application/json" \
+  -d '{"question":"What is the latest news on Apple Share price?"}'
+
+
+
+  curl -sS -X POST http://127.0.0.1:8082/chat/run \
+  -H "Content-Type: application/json" \
+  -d '{"question":"What are the news thart are related to Apple share price?"}'
+
+
+
+How is my portfolio composition compared to that of berkshire hathway

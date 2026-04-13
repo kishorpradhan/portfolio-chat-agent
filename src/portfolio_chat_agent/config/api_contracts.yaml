@@ -1,0 +1,63 @@
+portfolio_api:
+  base_url_env: PORTFOLIO_API_URL
+  auth:
+    type: bearer
+    token_env: PORTFOLIO_API_TOKEN
+  endpoints:
+    - name: portfolio_summary
+      method: GET
+      path: /portfolio/summary
+      description: Portfolio-level totals and P&L.
+      response_schema:
+        asOfDate: string
+        totalValue: number
+        totalInvested: number
+        unrealizedPl: number
+        unrealizedPct: number|null
+        realizedPl: number
+    - name: portfolio_allocation
+      method: GET
+      path: /portfolio/allocation
+      description: Allocation by ticker and sector.
+      response_schema:
+        tickers:
+          - ticker: string
+            marketValue: number
+            weight: number|null
+        sectors:
+          - sector: string
+            marketValue: number
+            weight: number|null
+    - name: portfolio_positions
+      method: GET
+      path: /portfolio/positions
+      description: Open and closed position metrics.
+      response_schema:
+        open:
+          - ticker: string
+            asOfDate: string
+            quantity: number
+            marketValue: number
+            costBasis: number
+            unrealizedPl: number
+            returnPct: number|null
+            dividendsReceived: number
+            xirr: number|null
+            contributionPct: number|null
+        closed:
+          - ticker: string
+            asOfDate: string
+            closedQuantity: number
+            realizedCostBasis: number
+            realizedProceeds: number
+            realizedPl: number
+            returnPct: number|null
+
+market_data:
+  tools:
+    - name: get_tckr_eod_price
+      description: Fetch end-of-day OHLCV for tickers over a date range.
+    - name: search_tool
+      description: Web search for market context when needed.
+    - name: classification_tool
+      description: Classify portfolio tickers by dimension (e.g., sector, industry, country) when needed.

@@ -1,0 +1,13 @@
+project_id = "portfolio-chat-agent"
+region     = "us-central1"
+chat_image = "gcr.io/portfolio-chat-agent/portfolio-chat-agent:latest"
+openai_api_key = "YOUR_OPENAI_API_KEY"
+llm_provider = "openai"
+openai_model = "gpt-4o-mini"
+intent_model = "gpt-4o-mini"
+planner_model = "gpt-4o-mini"
+codegen_model = "vertex_ai/gemini-3.1-flash-lite-preview"
+non_finance_nudge = "What are my top 5 stocks?"
+portfolio_api_url = "https://your-portfolio-api-url"
+portfolio_api_token = ""
+allow_unauthenticated = true

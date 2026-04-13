@@ -1,0 +1,195 @@
+datasets:
+  trades.csv:
+    description: "Trading history exported from Robinhood. Each row represents a single executed trade. Quantity is positive for BUY and negative for SELL."
+    columns:
+      - name: "id"
+        type: "string"
+        description: "Unique identifier for the transaction"
+        constraints:
+          primary_key: true
+          unique: true
+
+      - name: "symbol"
+        type: "string"
+        description: "Stock ticker symbol"
+
+      - name: "side"
+        type: "string"
+        description: "Direction of the trade"
+        constraints:
+          allowed_values: ["buy", "sell", "cancel"]
+
+      - name: "quantity"
+        type: "float"
+        description: "Number of shares traded"
+
+      - name: "price"
+        type: "float"
+        description: "Execution price per share"
+
+      - name: "created_at"
+        type: "datetime"
+        description: "Timestamp of trade execution"
+        format: "%Y-%m-%dT%H:%M:%S.%fZ"
+
+      - name: "state"
+        type: "string"
+        description: "Current status of the trade"
+        constraints:
+          allowed_values: ["filled", "cancelled", "pending"]
+
+    examples:
+      - id: "691b7f8b-df3a-4ef5-a5d6-447acd3c1a29"
+        symbol: "META"
+        side: "sell"
+        quantity: 2.0
+        price: 0.0
+        created_at: "2025-11-17T20:03:23.832327Z"
+        state: "filled"
+      - id: "690b4f1b-7321-449b-a922-885657361042"
+        symbol: "UBER"
+        side: "buy"
+        quantity: 10.0
+        price: 96.68
+        created_at: "2025-11-05T13:20:27.399882Z"
+        state: "filled"
+
+  positions.csv:
+    description: "Current portfolio snapshot. Contains the number of shares held, weighted exposure, and metadata for each ticker."
+    columns:
+      - name: "symbol"
+        type: "string"
+        description: "Stock ticker symbol"
+        constraints:
+          primary_key: true
+
+      - name: "quantity"
+        type: "float"
+        description: "Number of shares currently held"
+
+      - name: "average_price"
+        type: "float"
+        description: "Average cost basis per share"
+
+      - name: "price"
+        type: "float"
+        description: "Current market price per share"
+
+      - name: "pe_ratio"
+        type: "float"
+        description: "Company's price-to-earnings ratio"
+
+      - name: "list_date"
+        type: "date"
+        description: "Date when the stock was listed"
+
+      - name: "sector"
+        type: "string"
+        description: "Market sector of the stock"
+
+    examples:
+      - symbol: "AAPL"
+        quantity: 53.0
+        average_price: 211.8474
+        price: 267.55
+        pe_ratio: 36.49
+        list_date: null
+        sector: "Electronic Technology"
+      - symbol: "JPM"
+        quantity: 39.1455
+        average_price: 246.1734
+        price: 299.457
+        pe_ratio: 15.03
+        list_date: null
+        sector: "Finance"
+
+  dividends.csv:
+    description: "Dividend payments recorded for each ticker in my Robinhood Account."
+    columns:
+      - name: "date"
+        type: "datetime"
+        description: "Date the dividend was paid, payable, or recorded"
+
+      - name: "ticker"
+        type: "string"
+        description: "Stock ticker symbol"
+
+      - name: "amount"
+        type: "float"
+        description: "Dividend amount paid"
+
+      - name: "state"
+        type: "string"
+        description: "Dividend payment status"
+        constraints:
+          allowed_values: ["paid", "pending", "reinvested"]
+
+    examples.csv:
+      - date: "2025-12-27T05:31:29.080722Z"
+        ticker: "NVDA"
+        amount: 0.49
+        state: "paid"
+      - date: "2026-01-15"
+        ticker: "DIS"
+        amount: 22.5
+        state: "pending"
+
+  ticker_eod_price_history.csv:
+    description: "End-of-day OHLCV price history for tickers, sourced from Yahoo Finance."
+    columns:
+      - name: "date"
+        type: "date"
+        description: "Trading day (YYYY-MM-DD)"
+
+      - name: "open"
+        type: "float"
+        description: "Opening price"
+
+      - name: "high"
+        type: "float"
+        description: "Daily high price"
+
+      - name: "low"
+        type: "float"
+        description: "Daily low price"
+
+      - name: "close"
+        type: "float"
+        description: "Closing price"
+
+      - name: "volume"
+        type: "float"
+        description: "Daily trading volume"
+
+      - name: "ticker"
+        type: "string"
+        description: "Stock ticker symbol"
+
+    examples:
+      - date: "2024-01-02"
+        open: 187.15
+        high: 188.44
+        low: 183.89
+        close: 185.64
+        volume: 82488700
+        ticker: "AAPL"
+
+  search_results.json:
+    description: "Web search results for external market context or portfolio composition."
+    columns:
+      - name: "title"
+        type: "string"
+        description: "Result title"
+
+      - name: "content"
+        type: "string"
+        description: "Snippet or extracted content"
+
+      - name: "url"
+        type: "string"
+        description: "Result URL"
+
+    examples:
+      - title: "Berkshire Hathaway Portfolio Holdings"
+        content: "Summary of Berkshire Hathaway's top holdings and sector allocation."
+        url: "https://example.com/berkshire-hathaway-holdings"

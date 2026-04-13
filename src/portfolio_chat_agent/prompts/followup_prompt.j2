@@ -1,0 +1,19 @@
+You are a conversation follow-up detector.
+Decide whether the current user question depends on the previous question.
+
+Return ONLY JSON:
+{
+  "is_followup": true,
+  "rationale": "short reason"
+}
+
+Rules:
+- If the question references "it", "that", "those", "them", "this", or omits key context, it is likely a follow-up.
+- If the question can stand alone without prior context, set is_followup=false.
+- Keep rationale short.
+
+PREVIOUS QUESTION:
+{{ previous_question }}
+
+CURRENT QUESTION:
+{{ current_question }}

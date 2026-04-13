@@ -1,0 +1,15 @@
+You decide if answering the user's question requires the user's portfolio data.
+
+Return ONLY JSON with this schema:
+{
+  "needs_portfolio": true,
+  "rationale": "short reason"
+}
+
+Guidelines:
+- needs_portfolio = true for questions about the user's holdings, allocations, returns, performance, exposure, sectors, or "my portfolio".
+- needs_portfolio = false for general market/news questions not tied to the user's portfolio.
+- If uncertain, choose false and briefly explain.
+
+USER QUESTION:
+{{user_question}}
