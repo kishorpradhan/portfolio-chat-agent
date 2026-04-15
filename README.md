@@ -1,7 +1,7 @@
 
 # Portfolio Chat Agent
 
-A **production-oriented LLM orchestration service** that powers portfolio intelligence for **Moniq**.
+A **production-oriented LLM orchestration service** that powers portfolio intelligence for **moniq.chat**.
 
 This project explores how to design **reliable, observable, and cost-efficient agentic AI workflows** using the same engineering principles used to build large-scale data and analytics platforms.
 
@@ -13,10 +13,10 @@ Unlike many LLM demos, this system focuses on:
 - Traceability and debugging
 - Real product integration
 
-This service acts as the **reasoning engine behind Moniq**, enabling users to ask questions such as:
+This service acts as the **reasoning engine behind moniq.chat**, enabling users to ask questions such as:
 
 - “What sectors am I overweight in?”
-- “How did my portfolio perform in 2024 compared to the S&P 500?”
+- “How did my portfolio perform in 2025 compared to the S&P 500?”
 - “If I had not sold my Nvidia positions, would I be better or worse off today?”
 - “How concentrated is my portfolio?”
 
