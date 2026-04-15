@@ -53,7 +53,6 @@ Instead of navigating dashboards, users can ask questions directly about their p
 Examples:
 
 - What are my top positions?
-- Am I too concentrated?
 - What sectors dominate my portfolio?
 - How did my portfolio perform compared to NASDAQ in December 2025?
 - What drove my returns last month?
