@@ -46,7 +46,7 @@ This project explores how **platform engineering principles apply to AI systems*
 
 # Product Context: Moniq
 
-This service powers **Moniq**, a portfolio intelligence platform designed to help investors understand their investments using natural language.
+This service powers **Moniq**, a portfolio intelligence platform designed to help investors (specifically investors who have portfolios in the US and India) to understand their investments using natural language.
 
 Instead of navigating dashboards, users can ask questions directly about their portfolios.
 
