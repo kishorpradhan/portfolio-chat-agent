@@ -13,6 +13,7 @@ from portfolio_chat_agent.config.settings import get_settings
 from portfolio_chat_agent.planner.planner import ApiCall, PlannerOutput, run_planner
 from portfolio_chat_agent.prompts.loader import render_prompt
 from portfolio_chat_agent.compute.portfolio_api import (
+    PortfolioApiContext,
     fetch_portfolio_allocation,
     fetch_portfolio_positions,
 )
@@ -103,6 +104,8 @@ class GraphState(TypedDict, total=False):
     error_history: list[str]
     attempts: int
     auth_token: str
+    demo_session_id: str
+    profile_id: str
     user_id: str
     search_results: list[dict[str, str]]
     history: list[dict[str, str]]
@@ -413,12 +416,20 @@ def _extract_items(payload: dict) -> list[dict]:
     return []
 
 
-def _profile_portfolio_data(plan: PlannerOutput, auth_token: str | None) -> tuple[list[str], list[str]]:
+def _portfolio_context(state: GraphState) -> PortfolioApiContext:
+    return PortfolioApiContext(
+        token=state.get("auth_token"),
+        demo_session_id=state.get("demo_session_id"),
+        profile_id=state.get("profile_id"),
+    )
+
+
+def _profile_portfolio_data(plan: PlannerOutput, context: PortfolioApiContext) -> tuple[list[str], list[str]]:
     payload: dict = {}
     if "portfolio_positions" in plan.portfolio_endpoints:
-        payload = fetch_portfolio_positions(auth_token)
+        payload = fetch_portfolio_positions(context=context)
     elif "portfolio_allocation" in plan.portfolio_endpoints:
-        payload = fetch_portfolio_allocation(auth_token)
+        payload = fetch_portfolio_allocation(context=context)
     items = _extract_items(payload)
     fields: set[str] = set()
     tickers: list[str] = []
@@ -446,8 +457,7 @@ def _classification_node(state: GraphState) -> GraphState:
             elif call.query:
                 requested_dimension = call.query
             break
-    auth_token = state.get("auth_token")
-    fields, tickers = _profile_portfolio_data(plan, auth_token)
+    fields, tickers = _profile_portfolio_data(plan, _portfolio_context(state))
     question = state.get("combined_question") or state.get("question") or ""
     settings = get_settings()
     span = start_span(
@@ -608,14 +618,14 @@ def _codegen_placeholder_node(state: GraphState) -> GraphState:
 def _execute_placeholder_node(state: GraphState) -> GraphState:
     code = state.get("code") or ""
     attempts = int(state.get("attempts") or 0)
-    auth_token = state.get("auth_token")
+    context = _portfolio_context(state)
     span = start_span(
         name="execute",
         input={"code": code, "attempts": attempts, "compute_mode": state.get("compute_mode")},
     )
     try:
         _enforce_required_helpers(code, state.get("plan"))
-        output = _run_code(code, auth_token)
+        output = _run_code(code, context)
         end_span(span, output={"output": output})
         return {
             **state,
@@ -624,6 +634,20 @@ def _execute_placeholder_node(state: GraphState) -> GraphState:
             "status": "completed",
         }
     except Exception as exc:
+        fallback_output = _fallback_portfolio_execution(
+            state.get("combined_question") or state.get("question") or "",
+            state.get("plan"),
+            context,
+            str(exc),
+        )
+        if fallback_output is not None:
+            end_span(span, output={"output": fallback_output, "fallback": True})
+            return {
+                **state,
+                "execution_output": fallback_output,
+                "execution_error": "",
+                "status": "completed",
+            }
         error_history = list(state.get("error_history") or [])
         error_history.append(str(exc))
         end_span(span, error=str(exc))
@@ -634,6 +658,35 @@ def _execute_placeholder_node(state: GraphState) -> GraphState:
             "execution_output": code,
             "error_history": error_history,
         }
+
+
+def _fallback_portfolio_execution(
+    question: str,
+    plan: PlannerOutput | None,
+    context: PortfolioApiContext,
+    error: str,
+) -> str | None:
+    if "Code must call" not in error or not plan:
+        return None
+
+    question_lower = question.lower()
+    if "portfolio_positions" in plan.portfolio_endpoints:
+        payload = fetch_portfolio_positions(context=context)
+        positions = payload.get("open") or []
+        if not isinstance(positions, list):
+            return None
+        if any(term in question_lower for term in ("top", "largest", "holding", "holdings", "concentrat")):
+            positions = sorted(
+                [item for item in positions if isinstance(item, dict)],
+                key=lambda item: float(item.get("marketValue") or 0),
+                reverse=True,
+            )[:10]
+        return json.dumps({"open": positions, "closed": payload.get("closed") or []})
+
+    if "portfolio_allocation" in plan.portfolio_endpoints:
+        return json.dumps(fetch_portfolio_allocation(context=context))
+
+    return None
 
 
 def _synthesizer_placeholder_node(state: GraphState) -> GraphState:
@@ -767,7 +820,9 @@ def load_chat_history(conversation_id: str, user_id: str | None = None) -> list[
     ]
 
 
-def _run_code(code: str, auth_token: str | None) -> str:
+def _run_code(
+    code: str, context: PortfolioApiContext | None = None, auth_token: str | None = None
+) -> str:
     import json as _json
     import io
     import textwrap
@@ -803,10 +858,10 @@ def _run_code(code: str, auth_token: str | None) -> str:
     }
 
     def get_portfolio_allocation():
-        return fetch_portfolio_allocation(auth_token)
+        return fetch_portfolio_allocation(context=context or PortfolioApiContext(token=auth_token))
 
     def get_portfolio_positions():
-        return fetch_portfolio_positions(auth_token)
+        return fetch_portfolio_positions(context=context or PortfolioApiContext(token=auth_token))
 
     sandbox_globals = {
         "__builtins__": allowed_builtins,
@@ -963,12 +1018,17 @@ def run_chat_graph(question: str) -> ChatRunResult:
 
 
 def run_chat_graph_with_conversation(
-    question: str, conversation_id: str | None, auth_token: str | None, user_id: str | None = None
+    question: str,
+    conversation_id: str | None,
+    auth_token: str | None,
+    user_id: str | None = None,
+    demo_session_id: str | None = None,
+    profile_id: str | None = None,
 ) -> ChatRunResult:
     runner = build_chat_graph()
     run_id = str(uuid4())
     conversation = conversation_id or str(uuid4())
-    if not auth_token:
+    if not auth_token and not demo_session_id:
         return ChatRunResult(
             run_id=run_id,
             conversation_id=conversation,
@@ -978,7 +1038,8 @@ def run_chat_graph_with_conversation(
             response="Unable to access your portfolio. Please reconnect your account.",
             followup_needed=False,
         )
-    thread_id = f"{user_id}:{conversation}" if user_id else conversation
+    thread_parts = [part for part in (user_id, profile_id, conversation) if part]
+    thread_id = ":".join(thread_parts) if thread_parts else conversation
     settings = get_settings()
     trace = start_trace(
         name="chat_run",
@@ -1007,6 +1068,8 @@ def run_chat_graph_with_conversation(
                 "question": question,
                 "status": "started",
                 "auth_token": auth_token,
+                "demo_session_id": demo_session_id,
+                "profile_id": profile_id,
                 "user_id": user_id,
             },
             config={"configurable": {"thread_id": thread_id}},

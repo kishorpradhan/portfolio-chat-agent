@@ -14,7 +14,7 @@ def test_run_code_executes_with_portfolio_helpers(monkeypatch):
 
     monkeypatch.setattr(
         "portfolio_chat_agent.graph.chat_graph.fetch_portfolio_allocation",
-        lambda _token=None: sample,
+        lambda *args, **kwargs: sample,
     )
 
     code = """

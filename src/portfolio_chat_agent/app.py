@@ -15,6 +15,8 @@ class ChatRunRequest(BaseModel):
     question: str
     conversation_id: str | None = None
     user_id: str | None = None
+    profile_id: str | None = None
+    demo_session_id: str | None = None
 
 
 class ChatHistoryRequest(BaseModel):
@@ -36,6 +38,8 @@ def plan(request: PlanRequest):
 @app.post("/chat/run")
 def chat_run(request: Request, payload: ChatRunRequest):
     auth_header = request.headers.get("authorization") or ""
+    demo_session_id = payload.demo_session_id or request.headers.get("x-moniq-demo-session")
+    profile_id = payload.profile_id or request.headers.get("x-moniq-profile-id")
     auth_token = auth_header
     if auth_header.lower().startswith("bearer "):
         auth_token = auth_header.split(" ", 1)[1].strip()
@@ -44,6 +48,8 @@ def chat_run(request: Request, payload: ChatRunRequest):
         conversation_id=payload.conversation_id,
         user_id=payload.user_id,
         auth_token=auth_token or None,
+        demo_session_id=demo_session_id,
+        profile_id=profile_id,
     )
     return result.model_dump()
 
