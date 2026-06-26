@@ -790,13 +790,18 @@ def _append_history(state: GraphState, response: str) -> list[dict[str, str]]:
     return history
 
 
-def load_chat_history(conversation_id: str, user_id: str | None = None) -> list[dict[str, str]]:
+def load_chat_history(
+    conversation_id: str,
+    user_id: str | None = None,
+    profile_id: str | None = None,
+) -> list[dict[str, str]]:
     if not conversation_id:
         return []
     checkpointer = get_checkpointer()
     if not checkpointer:
         return []
-    thread_id = f"{user_id}:{conversation_id}" if user_id else conversation_id
+    thread_parts = [part for part in (user_id, profile_id, conversation_id) if part]
+    thread_id = ":".join(thread_parts) if thread_parts else conversation_id
     try:
         checkpoint = checkpointer.get({"configurable": {"thread_id": thread_id}})
     except Exception:

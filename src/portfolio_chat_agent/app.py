@@ -22,6 +22,8 @@ class ChatRunRequest(BaseModel):
 class ChatHistoryRequest(BaseModel):
     conversation_id: str
     user_id: str | None = None
+    profile_id: str | None = None
+    demo_session_id: str | None = None
 
 
 @app.get("/health")
@@ -55,6 +57,11 @@ def chat_run(request: Request, payload: ChatRunRequest):
 
 
 @app.post("/chat/history")
-def chat_history(payload: ChatHistoryRequest):
-    messages = load_chat_history(payload.conversation_id, user_id=payload.user_id)
+def chat_history(request: Request, payload: ChatHistoryRequest):
+    profile_id = payload.profile_id or request.headers.get("x-moniq-profile-id")
+    messages = load_chat_history(
+        payload.conversation_id,
+        user_id=payload.user_id,
+        profile_id=profile_id,
+    )
     return {"conversation_id": payload.conversation_id, "messages": messages}
